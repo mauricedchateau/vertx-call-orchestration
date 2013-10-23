@@ -36,8 +36,13 @@ public abstract class AbstractDecisionHandler implements OrchestratedHandler, Re
             // Start whenTrue sequence.
             whenTrue.execute(this);
         } else {
-            // Start whenFalse sequence.
-            whenFalse.execute(this);
+            if (whenFalse != null) {
+                // Start whenFalse sequence.
+                whenFalse.execute(this);
+            } else {
+                // No calls to be made within this decision.
+                completed();
+            }
         }
     }
 

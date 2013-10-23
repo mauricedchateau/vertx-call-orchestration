@@ -9,6 +9,9 @@ public interface CallSyntax {
     CallSyntax addParallelCalls(final Class<? extends AbstractCallHandler>... handlers);
 
     CallSyntax addDecision(final Class<? extends AbstractDecisionHandler> handler,
+                           final ExecutionUnit<?> whenTrue);
+
+    CallSyntax addDecision(final Class<? extends AbstractDecisionHandler> handler,
                            final ExecutionUnit<?> whenTrue, final ExecutionUnit<?> whenFalse);
 
     ExecutionUnit<?> build();

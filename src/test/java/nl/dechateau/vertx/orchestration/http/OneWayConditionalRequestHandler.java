@@ -1,9 +1,8 @@
-package nl.dechateau.vertx.orchestration.eventbus;
+package nl.dechateau.vertx.orchestration.http;
 
-import nl.dechateau.vertx.orchestration.AbstractMessageHandler;
+import nl.dechateau.vertx.orchestration.AbstractHttpServerRequestHandler;
 import nl.dechateau.vertx.orchestration.builder.ExecutionUnit;
 import nl.dechateau.vertx.orchestration.common.DecisionHandler;
-import nl.dechateau.vertx.orchestration.common.DecreaseCallHandler;
 import nl.dechateau.vertx.orchestration.common.IncreaseCallHandler;
 import org.vertx.java.core.Vertx;
 
@@ -13,23 +12,22 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.vertx.testtools.VertxAssert.assertThat;
 
-public class ConditionalMessageHandler extends AbstractMessageHandler {
-    protected ConditionalMessageHandler(Vertx vertx) {
+public class OneWayConditionalRequestHandler extends AbstractHttpServerRequestHandler {
+    protected OneWayConditionalRequestHandler(Vertx vertx) {
         super(vertx);
     }
 
     @Override
     protected void initializeContextVariables(Map<String, Object> contextVariables) {
-        contextVariables.put("number", getMessageParameter("number"));
-        contextVariables.put("condition", getMessageParameter("condition"));
+        contextVariables.put("number", Integer.valueOf(getRequestParameter("number")));
+        contextVariables.put("condition", Boolean.valueOf(getRequestParameter("condition")));
     }
 
     @Override
     protected ExecutionUnit<?> defineCallSequence() {
         return newCallSequence()
                 .addDecision(DecisionHandler.class,
-                        whenTrue(newCallSequence().addCall(IncreaseCallHandler.class)),
-                        whenFalse(newCallSequence().addCall(DecreaseCallHandler.class)))
+                        whenTrue(newCallSequence().addCall(IncreaseCallHandler.class)))
                 .build();
     }
 
@@ -38,7 +36,7 @@ public class ConditionalMessageHandler extends AbstractMessageHandler {
         if ((Boolean) contextVariables.get("condition")) {
             assertThat((Integer) contextVariables.get("number"), is(equalTo(2)));
         } else {
-            assertThat((Integer) contextVariables.get("number"), is(equalTo(0)));
+            assertThat((Integer) contextVariables.get("number"), is(equalTo(1)));
         }
         endRequest();
     }

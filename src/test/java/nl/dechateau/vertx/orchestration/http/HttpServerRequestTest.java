@@ -58,23 +58,37 @@ public class HttpServerRequestTest extends TestVerticle {
     }
 
     @Test
-    public void conditionalTrueRequest() {
-        makeRequest(new ConditionalRequestHandler(vertx), true);
+    public void oneWayConditionalTrueRequest() {
+        makeRequest(new OneWayConditionalRequestHandler(vertx), true);
     }
 
     @Test
-    public void conditionalFalseRequest() {
-        makeRequest(new ConditionalRequestHandler(vertx), false);
+    public void oneWayConditionalFalseRequest() {
+        makeRequest(new OneWayConditionalRequestHandler(vertx), false);
     }
 
-    private void makeRequest(AbstractHttpServerRequestHandler requestHandler, boolean... condition) {
+    @Test
+    public void twoWayConditionalTrueRequest() {
+        makeRequest(new TwoWayConditionalRequestHandler(vertx), true);
+    }
+
+    @Test
+    public void twoWayConditionalFalseRequest() {
+        makeRequest(new TwoWayConditionalRequestHandler(vertx), false);
+    }
+
+    private void makeRequest(AbstractHttpServerRequestHandler requestHandler) {
+        makeRequest(requestHandler, null);
+    }
+
+    private void makeRequest(AbstractHttpServerRequestHandler requestHandler, Boolean condition) {
         // Set up a dummy request and contained response.
         HttpServerRequest request = mock(HttpServerRequest.class);
         when(request.method()).thenReturn("GET");
         when(request.path()).thenReturn("acme.com/stuff");
         MultiMap params = new CaseInsensitiveMultiMap().add("number", "1");
-        if (condition != null && condition.length > 0) {
-            params.add("condition", Boolean.toString(condition[0]));
+        if (condition != null) {
+            params.add("condition", condition.toString());
         }
         when(request.params()).thenReturn(params);
         HttpServerResponse response = mock(HttpServerResponse.class);

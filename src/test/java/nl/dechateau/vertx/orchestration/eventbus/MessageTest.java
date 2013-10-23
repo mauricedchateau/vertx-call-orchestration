@@ -3,7 +3,6 @@ package nl.dechateau.vertx.orchestration.eventbus;
 import nl.dechateau.vertx.orchestration.AbstractMessageHandler;
 import nl.dechateau.vertx.orchestration.common.DecreasingVerticle;
 import nl.dechateau.vertx.orchestration.common.IncreasingVerticle;
-import nl.dechateau.vertx.orchestration.http.ConditionalRequestHandler;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -32,7 +31,7 @@ public class MessageTest extends TestVerticle {
                 if (--waitFor == 0) {
                     MessageTest.super.start();
                     startResult.setResult(null);
-                    LOG.trace("HttpServerRequestTest verticle started.");
+                    LOG.trace("MessageTest verticle started.");
                 }
             }
         };
@@ -56,28 +55,42 @@ public class MessageTest extends TestVerticle {
     }
 
     @Test
-    public void conditionalTrueRequest() {
-        makeRequest(new ConditionalMessageHandler(vertx), true);
+    public void oneWayConditionalTrueRequest() {
+        makeRequest(new OneWayConditionalMessageHandler(vertx), true);
     }
 
     @Test
-    public void conditionalFalseRequest() {
-        makeRequest(new ConditionalMessageHandler(vertx), false);
+    public void oneWayConditionalFalseRequest() {
+        makeRequest(new OneWayConditionalMessageHandler(vertx), false);
     }
 
-    private void makeRequest(AbstractMessageHandler messageHandler, boolean... condition) {
+    @Test
+    public void twoWayConditionalTrueRequest() {
+        makeRequest(new TwoWayConditionalMessageHandler(vertx), true);
+    }
+
+    @Test
+    public void twoWayConditionalFalseRequest() {
+        makeRequest(new TwoWayConditionalMessageHandler(vertx), false);
+    }
+
+    private void makeRequest(AbstractMessageHandler messageHandler) {
+        makeRequest(messageHandler, null);
+    }
+
+    private void makeRequest(AbstractMessageHandler messageHandler, Boolean condition) {
         // Set up a dummy message and contained response.
         @SuppressWarnings("unchecked")
         Message<JsonObject> message = (Message<JsonObject>) mock(Message.class);
         JsonObject body = new JsonObject().putNumber("number", 1);
-        if (condition != null && condition.length > 0) {
-            body.putBoolean("condition", condition[0]);
+        if (condition != null) {
+            body.putBoolean("condition", condition);
         }
         when(message.body()).thenReturn(body);
         doAnswer(new Answer() {
             @Override
             public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
-                // Have the test complete when the end() method on the response is called.
+                // Have the test complete when the reply() method on the message is called.
                 testComplete();
                 return null;
             }

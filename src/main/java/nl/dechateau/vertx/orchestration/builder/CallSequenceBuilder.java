@@ -74,6 +74,41 @@ public final class CallSequenceBuilder implements CallSyntax {
      */
     @Override
     public CallSyntax addDecision(final Class<? extends AbstractDecisionHandler> handler,
+                                  final ExecutionUnit<?> whenTrue) {
+        if (handler == null) {
+            // Nothing to add.
+            throw new IllegalStateException("Received NULL in an attempt to add a decision handler.");
+        }
+        if (whenTrue == null) {
+            // Incomplete decision.
+            throw new IllegalStateException("Missing whenTrue option for decision handler.");
+        }
+
+        // Instantiate an execution unit with this decision handler.
+        ExecutionUnit<AbstractDecisionHandler> unit = new ExecutionUnit<>();
+        AbstractDecisionHandler decision = null;
+        try {
+            decision = handler.getConstructor(OrchestrationContext.class).newInstance(context);
+            unit.addHandler(decision);
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException ex) {
+            LOG.error("Problem instantiating handler for class {}: {}.", handler.getName(), ex.getMessage());
+        }
+
+        // Add whenTrue and whenFalse to the decision handler.
+        if (decision != null) {
+            decision.setWhenTrue(whenTrue);
+        }
+
+        addUnitToSequence(unit);
+
+        return this;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public CallSyntax addDecision(final Class<? extends AbstractDecisionHandler> handler,
                                   final ExecutionUnit<?> whenTrue, final ExecutionUnit<?> whenFalse) {
         if (handler == null) {
             // Nothing to add.
@@ -84,7 +119,7 @@ public final class CallSequenceBuilder implements CallSyntax {
             throw new IllegalStateException("Missing whenTrue or/and whenFalse options for decision handler.");
         }
 
-        // Instantiate an execution unit with this decision hander.
+        // Instantiate an execution unit with this decision handler.
         ExecutionUnit<AbstractDecisionHandler> unit = new ExecutionUnit<>();
         AbstractDecisionHandler decision = null;
         try {
