@@ -77,6 +77,11 @@ public class HttpServerRequestTest extends TestVerticle {
         makeRequest(new TwoWayConditionalRequestHandler(vertx), false);
     }
 
+    @Test
+    public void oneWayRequest() {
+        makeRequest(new OneWayRequestHandler(vertx));
+    }
+
     private void makeRequest(AbstractHttpServerRequestHandler requestHandler) {
         makeRequest(requestHandler, null);
     }

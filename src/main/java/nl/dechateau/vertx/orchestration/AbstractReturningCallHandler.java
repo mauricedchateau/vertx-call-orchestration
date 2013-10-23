@@ -4,7 +4,6 @@ import nl.dechateau.vertx.serialization.SerializationException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonElement;
@@ -13,16 +12,16 @@ import org.vertx.java.core.json.JsonObject;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 
-public abstract class AbstractCallHandler implements OrchestratedHandler, Handler<Message<JsonObject>> {
-    private static final Logger LOG = LoggerFactory.getLogger(AbstractCallHandler.class);
+public abstract class AbstractReturningCallHandler implements CallHandler, org.vertx.java.core.Handler<Message<JsonObject>> {
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractReturningCallHandler.class);
+
+    protected ResponseListener responder;
 
     private OrchestrationContext context;
 
     private boolean isCompleted = false;
 
-    protected ResponseListener responder;
-
-    protected AbstractCallHandler(final OrchestrationContext context) {
+    protected AbstractReturningCallHandler(final OrchestrationContext context) {
         this.context = context;
     }
 
@@ -146,7 +145,7 @@ public abstract class AbstractCallHandler implements OrchestratedHandler, Handle
      * @throws SerializationException If the JSON object could not be de-serialized into a Java object properly.
      */
     protected void processResult(final JsonObject result) throws SerializationException {
-        LOG.warn("This method should be overridden! (AbstractCallHandler.processResult)");
+        LOG.warn("This method should be overridden! (AbstractReturningCallHandler.processResult)");
     }
 
     /**
@@ -162,7 +161,7 @@ public abstract class AbstractCallHandler implements OrchestratedHandler, Handle
      * @throws SerializationException If the JSON array could not be de-serialized into a Java object properly.
      */
     protected void processResult(final JsonArray result) throws SerializationException {
-        LOG.warn("This method should be overridden! (AbstractCallHandler.processResult)");
+        LOG.warn("This method should be overridden! (AbstractReturningCallHandler.processResult)");
     }
 
     /**

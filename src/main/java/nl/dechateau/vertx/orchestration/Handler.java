@@ -1,9 +1,9 @@
 package nl.dechateau.vertx.orchestration;
 
 /**
- * Marker interface for handlers within the orchestration.
+ * Interface for <code>handler</code>s within the orchestration.
  */
-public interface OrchestratedHandler {
+public interface Handler {
     /**
      * Called to initiate the execution of the handler.
      *

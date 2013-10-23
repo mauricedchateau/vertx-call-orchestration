@@ -74,6 +74,11 @@ public class MessageTest extends TestVerticle {
         makeRequest(new TwoWayConditionalMessageHandler(vertx), false);
     }
 
+    @Test
+    public void oneWayRequest() {
+        makeRequest(new OneWayMessageHandler(vertx));
+    }
+
     private void makeRequest(AbstractMessageHandler messageHandler) {
         makeRequest(messageHandler, null);
     }

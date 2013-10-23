@@ -1,6 +1,6 @@
 package nl.dechateau.vertx.orchestration.builder;
 
-import nl.dechateau.vertx.orchestration.OrchestratedHandler;
+import nl.dechateau.vertx.orchestration.Handler;
 import nl.dechateau.vertx.orchestration.ResponseListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,12 +8,12 @@ import org.slf4j.LoggerFactory;
 import java.util.HashSet;
 import java.util.Set;
 
-public final class ExecutionUnit<T extends OrchestratedHandler> implements ResponseListener {
+public final class ExecutionUnit<T extends Handler> implements ResponseListener {
     private static final Logger LOG = LoggerFactory.getLogger(ExecutionUnit.class);
 
     private final Set<T> handlers;
 
-    private ExecutionUnit<? extends OrchestratedHandler> next;
+    private ExecutionUnit<? extends Handler> next;
 
     private ResponseListener responseListener;
 
@@ -29,7 +29,7 @@ public final class ExecutionUnit<T extends OrchestratedHandler> implements Respo
         return next;
     }
 
-    public void setNext(final ExecutionUnit<? extends OrchestratedHandler> next) {
+    public void setNext(final ExecutionUnit<? extends Handler> next) {
         if (this.next != null) {
             throw new IllegalStateException("Next unit already set.");
         }

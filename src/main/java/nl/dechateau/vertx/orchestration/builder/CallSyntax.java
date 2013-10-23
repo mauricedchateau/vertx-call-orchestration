@@ -1,12 +1,12 @@
 package nl.dechateau.vertx.orchestration.builder;
 
-import nl.dechateau.vertx.orchestration.AbstractCallHandler;
 import nl.dechateau.vertx.orchestration.AbstractDecisionHandler;
+import nl.dechateau.vertx.orchestration.CallHandler;
 
 public interface CallSyntax {
-    CallSyntax addCall(final Class<? extends AbstractCallHandler> handler);
+    CallSyntax addCall(final Class<? extends CallHandler> handler);
 
-    CallSyntax addParallelCalls(final Class<? extends AbstractCallHandler>... handlers);
+    CallSyntax addParallelCalls(final Class<? extends CallHandler>... handlers);
 
     CallSyntax addDecision(final Class<? extends AbstractDecisionHandler> handler,
                            final ExecutionUnit<?> whenTrue);

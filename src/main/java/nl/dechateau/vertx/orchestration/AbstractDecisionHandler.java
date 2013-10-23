@@ -2,7 +2,7 @@ package nl.dechateau.vertx.orchestration;
 
 import nl.dechateau.vertx.orchestration.builder.ExecutionUnit;
 
-public abstract class AbstractDecisionHandler implements OrchestratedHandler, ResponseListener {
+public abstract class AbstractDecisionHandler implements Handler, ResponseListener {
     private OrchestrationContext context;
 
     private ExecutionUnit<?> whenTrue;
