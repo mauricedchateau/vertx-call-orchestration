@@ -87,15 +87,15 @@ public abstract class AbstractEventHandler<E> implements ResponseListener, Handl
     /**
      * {@inheritDoc}
      */
-    public final ExecutionUnit<?> whenTrue(final CallSyntax call) {
-        return call.build();
+    public final ExecutionUnit<?> whenTrue(final ExecutionUnit<?> callSequence) {
+        return callSequence;
     }
 
     /**
      * {@inheritDoc}
      */
-    public final ExecutionUnit<?> whenFalse(final CallSyntax call) {
-        return call.build();
+    public final ExecutionUnit<?> whenFalse(final ExecutionUnit<?> callSequence) {
+        return callSequence;
     }
 
     /**

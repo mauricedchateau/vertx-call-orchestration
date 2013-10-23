@@ -28,8 +28,8 @@ public class TwoWayConditionalRequestHandler extends AbstractHttpServerRequestHa
     protected ExecutionUnit<?> defineCallSequence() {
         return newCallSequence()
                 .addDecision(DecisionHandler.class,
-                        whenTrue(newCallSequence().addCall(IncreaseCallHandler.class)),
-                        whenFalse(newCallSequence().addCall(DecreaseCallHandler.class)))
+                        whenTrue(newCallSequence().addCall(IncreaseCallHandler.class).build()),
+                        whenFalse(newCallSequence().addCall(DecreaseCallHandler.class).build()))
                 .build();
     }
 

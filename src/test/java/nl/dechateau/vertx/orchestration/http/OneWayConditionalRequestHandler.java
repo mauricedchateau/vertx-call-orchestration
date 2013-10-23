@@ -27,7 +27,7 @@ public class OneWayConditionalRequestHandler extends AbstractHttpServerRequestHa
     protected ExecutionUnit<?> defineCallSequence() {
         return newCallSequence()
                 .addDecision(DecisionHandler.class,
-                        whenTrue(newCallSequence().addCall(IncreaseCallHandler.class)))
+                        whenTrue(newCallSequence().addCall(IncreaseCallHandler.class).build()))
                 .build();
     }
 

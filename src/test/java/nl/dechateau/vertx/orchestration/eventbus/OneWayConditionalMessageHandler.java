@@ -27,7 +27,7 @@ public class OneWayConditionalMessageHandler extends AbstractMessageHandler {
     protected ExecutionUnit<?> defineCallSequence() {
         return newCallSequence()
                 .addDecision(DecisionHandler.class,
-                        whenTrue(newCallSequence().addCall(IncreaseCallHandler.class)))
+                        whenTrue(newCallSequence().addCall(IncreaseCallHandler.class).build()))
                 .build();
     }
 
