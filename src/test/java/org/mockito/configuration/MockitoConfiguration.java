@@ -13,10 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.dechateau.vertx.serialization;
+package org.mockito.configuration;
 
-public class SerializationException extends Exception {
-    public SerializationException(String message, Throwable cause) {
-        super(message, cause);
+/**
+ * This class is added to override the default configuration of Mockito, by disabling the Objenesis cache which causes ClassLoader issues in the test.
+ */
+public class MockitoConfiguration extends DefaultMockitoConfiguration {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean enableClassCache() {
+        return false;
     }
 }

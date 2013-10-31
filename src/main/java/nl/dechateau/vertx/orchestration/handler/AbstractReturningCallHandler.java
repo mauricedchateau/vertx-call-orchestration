@@ -1,91 +1,75 @@
-package nl.dechateau.vertx.orchestration;
+/*
+ * Copyright 2013 Maurice de Chateau
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package nl.dechateau.vertx.orchestration.handler;
 
+import nl.dechateau.vertx.orchestration.ResponseListener;
 import nl.dechateau.vertx.serialization.SerializationException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonElement;
 import org.vertx.java.core.json.JsonObject;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-
-public abstract class AbstractReturningCallHandler implements CallHandler, org.vertx.java.core.Handler<Message<JsonObject>> {
+/**
+ * Base class for handlers that make calls over the event bus and expect an answer.
+ */
+public abstract class AbstractReturningCallHandler implements CallHandler, Handler<Message<JsonObject>> {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractReturningCallHandler.class);
 
-    protected ResponseListener responder;
+    protected ResponseListener responseListener;
 
     private OrchestrationContext context;
 
     private boolean isCompleted = false;
 
-    protected AbstractReturningCallHandler(final OrchestrationContext context) {
-        this.context = context;
-    }
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public final void execute(final ResponseListener responder) {
-        this.responder = responder;
+    public final void execute(final OrchestrationContext context, final ResponseListener responseListener) {
+        this.context = context;
+        this.responseListener = responseListener;
+
         try {
             context.getEventBus().send(getDestination(), getCallMessage(), this);
         } catch (SerializationException serEx) {
             LOG.error("Problem de-serializing received data:", serEx);
             isCompleted = true;
-            responder.error(serEx.getMessage());
+            responseListener.error(serEx.getMessage());
         }
     }
 
     /**
-     * @return The location of the service to which the call is to be made.
+     * @return The location of the verticle to which the call is to be made.
      */
     protected abstract String getDestination();
 
     /**
-     * @return The JSON message containing the service call parameters.
+     * @return The JSON message containing the verticle call parameters.
      */
     protected abstract JsonObject getCallMessage() throws SerializationException;
-
-    /**
-     * Convenience method for retrieval of a request parameter.
-     *
-     * @param name The name of the parameter.
-     * @return The parameter value.
-     */
-    protected final String getRequestParameter(final String name) {
-        try {
-            return URLDecoder.decode(context.getRequestParameter(name), "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            LOG.error("Unable to decode request parameter: {}", e.getMessage());
-        }
-
-        return null;
-    }
-
-    /**
-     * Convenience method for retrieval of a parameter from request header.
-     *
-     * @param name The name of the header parameter.
-     * @return The header parameter value.
-     */
-    protected final String getHeaderParameter(final String name) {
-        return context.getHeaderParameter(name);
-    }
-
-    /**
-     * Convenience method for retrieval of the data received with a POST request.
-     *
-     * @return The data from the POST request.
-     */
-    protected final String getPostData() {
-        return getRequestParameter(AbstractHttpServerRequestHandler.POST_DATA_KEY);
-    }
 
     /**
      * Convenience method for getting a parameter from the context.
      *
      * @param key The key of the parameter.
+     * @return The value of the context parameter, or <code>null</code> if there is no parameter with the given key.
      */
     protected final Object getContextVar(final String key) {
         return context.getContextVar(key);
@@ -97,7 +81,7 @@ public abstract class AbstractReturningCallHandler implements CallHandler, org.v
     @Override
     public final void handle(final Message<JsonObject> replyMessage) {
         final JsonObject reply = replyMessage.body();
-        LOG.trace("Handle reply message from service call: {}", reply.encode());
+        LOG.trace("Handle reply message from verticle call: {}", reply.encode());
 
         if (StringUtils.equals(reply.getString("status"), "ok")) {
             final JsonElement result = reply.getValue("result");
@@ -112,11 +96,11 @@ public abstract class AbstractReturningCallHandler implements CallHandler, org.v
                 } catch (SerializationException serEx) {
                     LOG.error("Problem deserializing received data:", serEx);
                     isCompleted = true;
-                    responder.error(serEx.getMessage());
+                    responseListener.error(serEx.getMessage());
                     return;
                 } catch (Throwable throwable) {
                     isCompleted = true;
-                    responder.error(throwable.getMessage());
+                    responseListener.error(throwable.getMessage());
                     return;
                 }
             } else {
@@ -129,11 +113,11 @@ public abstract class AbstractReturningCallHandler implements CallHandler, org.v
         }
 
         isCompleted = true;
-        responder.completed();
+        responseListener.completed(context.getVars());
     }
 
     /**
-     * Process the result of the service call:
+     * Process the result of the verticle call:
      * <ul>
      * <li>De-serialize the JSON object into a Java object, or get the value(s) directly from the JSON element;</li>
      * <li>If necessary, perform additional processing;</li>
@@ -145,11 +129,11 @@ public abstract class AbstractReturningCallHandler implements CallHandler, org.v
      * @throws SerializationException If the JSON object could not be de-serialized into a Java object properly.
      */
     protected void processResult(final JsonObject result) throws SerializationException {
-        LOG.warn("This method should be overridden! (AbstractReturningCallHandler.processResult)");
+        LOG.warn("This method should have been overridden! (AbstractReturningCallHandler.processResult(JsonObject))");
     }
 
     /**
-     * Process the result of the service call:
+     * Process the result of the verticle call:
      * <ul>
      * <li>De-serialize the JSON array into a Java object, or get the value(s) directly from the JSON element;</li>
      * <li>If necessary, perform additional processing;</li>
@@ -161,7 +145,7 @@ public abstract class AbstractReturningCallHandler implements CallHandler, org.v
      * @throws SerializationException If the JSON array could not be de-serialized into a Java object properly.
      */
     protected void processResult(final JsonArray result) throws SerializationException {
-        LOG.warn("This method should be overridden! (AbstractReturningCallHandler.processResult)");
+        LOG.warn("This method should have been overridden! (AbstractReturningCallHandler.processResult(JsonArray))");
     }
 
     /**
@@ -183,7 +167,7 @@ public abstract class AbstractReturningCallHandler implements CallHandler, org.v
      * @param errorMessage The message that accompanied the error that occurred.
      */
     protected void processErrorResult(final String errorMessage) {
-        responder.error("Service call returned error: " + errorMessage);
+        responseListener.error("Service call returned error: " + errorMessage);
     }
 
     /**
@@ -197,9 +181,7 @@ public abstract class AbstractReturningCallHandler implements CallHandler, org.v
     }
 
     /**
-     * Called by the <code>ServiceCallOrchestrator</code> to confirm whether this handler has completed its task yet.
-     *
-     * @return Whether this handler has made its service call <i>and</i> processed the corresponding result.
+     * {@inheritDoc}
      */
     @Override
     public final boolean isCompleted() {

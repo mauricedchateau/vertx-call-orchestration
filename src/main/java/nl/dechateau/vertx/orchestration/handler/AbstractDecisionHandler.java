@@ -1,8 +1,29 @@
-package nl.dechateau.vertx.orchestration;
+/*
+ * Copyright 2013 Maurice de Chateau
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package nl.dechateau.vertx.orchestration.handler;
 
-import nl.dechateau.vertx.orchestration.builder.ExecutionUnit;
+import nl.dechateau.vertx.orchestration.ResponseListener;
+import nl.dechateau.vertx.orchestration.ExecutionUnit;
 
-public abstract class AbstractDecisionHandler implements Handler, ResponseListener {
+import java.util.Map;
+
+/**
+ * Base class for handlers that identify conditional paths within the call sequence.
+ */
+public abstract class AbstractDecisionHandler implements OrchestrationHandler, ResponseListener {
     private OrchestrationContext context;
 
     private ExecutionUnit<?> whenTrue;
@@ -12,10 +33,6 @@ public abstract class AbstractDecisionHandler implements Handler, ResponseListen
     private ResponseListener responseListener;
 
     private boolean isCompleted = false;
-
-    public AbstractDecisionHandler(final OrchestrationContext context) {
-        this.context = context;
-    }
 
     public final void setWhenTrue(final ExecutionUnit<?> whenTrue) {
         this.whenTrue = whenTrue;
@@ -29,19 +46,20 @@ public abstract class AbstractDecisionHandler implements Handler, ResponseListen
      * {@inheritDoc}
      */
     @Override
-    public final void execute(final ResponseListener responseListener) {
+    public final void execute(final OrchestrationContext context, final ResponseListener responseListener) {
+        this.context = context;
         this.responseListener = responseListener;
 
         if (makeDecision()) {
             // Start whenTrue sequence.
-            whenTrue.execute(this);
+            whenTrue.execute(context, this);
         } else {
             if (whenFalse != null) {
                 // Start whenFalse sequence.
-                whenFalse.execute(this);
+                whenFalse.execute(context, this);
             } else {
                 // No calls to be made within this decision.
-                completed();
+                completed(context.getVars());
             }
         }
     }
@@ -74,10 +92,10 @@ public abstract class AbstractDecisionHandler implements Handler, ResponseListen
      * {@inheritDoc}
      */
     @Override
-    public final void completed() {
+    public final void completed(Map<String, Object> vars) {
         // The chosen path is completed.
         isCompleted = true;
-        responseListener.completed();
+        responseListener.completed(vars);
     }
 
     /**

@@ -1,0 +1,192 @@
+/*
+ * Copyright 2013 Maurice de Chateau
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package nl.dechateau.vertx.orchestration;
+
+import nl.dechateau.vertx.orchestration.handler.DecisionHandler;
+import nl.dechateau.vertx.orchestration.handler.DecreaseCallHandler;
+import nl.dechateau.vertx.orchestration.handler.GetCalledCallHandler;
+import nl.dechateau.vertx.orchestration.handler.IncreaseCallHandler;
+import nl.dechateau.vertx.orchestration.verticle.DecreasingVerticle;
+import nl.dechateau.vertx.orchestration.verticle.GetCalledVerticle;
+import nl.dechateau.vertx.orchestration.verticle.IncreasingVerticle;
+import org.junit.Test;
+import org.mockito.Matchers;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.vertx.java.core.AsyncResult;
+import org.vertx.java.core.Future;
+import org.vertx.java.core.Handler;
+import org.vertx.testtools.TestVerticle;
+
+import java.util.Map;
+
+import static nl.dechateau.vertx.orchestration.CallSequence.Builder.createCallSequence;
+import static nl.dechateau.vertx.orchestration.CallSequence.Builder.whenFalse;
+import static nl.dechateau.vertx.orchestration.CallSequence.Builder.whenTrue;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.vertx.testtools.VertxAssert.assertThat;
+import static org.vertx.testtools.VertxAssert.testComplete;
+
+public class OrchestrationTest extends TestVerticle {
+    private static final Logger LOG = LoggerFactory.getLogger(OrchestrationTest.class);
+
+    @Override
+    public void start(final Future<Void> startResult) {
+        Handler<AsyncResult<String>> handler = new Handler<AsyncResult<String>>() {
+            private int waitFor = 3;
+
+            @Override
+            public void handle(AsyncResult<String> event) {
+                if (--waitFor == 0) {
+                    OrchestrationTest.super.start();
+                    startResult.setResult(null);
+                    LOG.trace("HttpServerRequestTest verticle started.");
+                }
+            }
+        };
+        container.deployVerticle(IncreasingVerticle.class.getName(), handler);
+        container.deployVerticle(DecreasingVerticle.class.getName(), handler);
+        container.deployVerticle(GetCalledVerticle.class.getName(), handler);
+    }
+
+    @Test
+    public void singleRequest() {
+        CallSequence sequence = createCallSequence(vertx)
+                .addCall(IncreaseCallHandler.class)
+                .build();
+        sequence.setContextVar("number", 1);
+
+        makeRequest(sequence, 2);
+    }
+
+    @Test
+    public void sequentialRequest() {
+        CallSequence sequence = createCallSequence(vertx)
+                .addCall(IncreaseCallHandler.class)
+                .addCall(IncreaseCallHandler.class)
+                .build();
+        sequence.setContextVar("number", 1);
+
+        makeRequest(sequence, 3);
+    }
+
+    @Test
+    public void parallelRequest() {
+        CallSequence sequence = createCallSequence(vertx)
+                .addParallelCalls(
+                        IncreaseCallHandler.class,
+                        IncreaseCallHandler.class)
+                .build();
+        sequence.setContextVar("number", 1);
+
+        makeRequest(sequence, 2);
+    }
+
+    @Test
+    public void oneWayConditionalTrueRequest() {
+        CallSequence sequence = createCallSequence(vertx)
+                .addDecision(DecisionHandler.class,
+                        whenTrue(createCallSequence(vertx)
+                                .addCall(IncreaseCallHandler.class)
+                                .build()))
+                .build();
+        sequence.setContextVar("number", 1);
+        sequence.setContextVar("condition", true);
+
+        makeRequest(sequence, 2);
+    }
+
+    @Test
+    public void oneWayConditionalFalseRequest() {
+        CallSequence sequence = createCallSequence(vertx)
+                .addDecision(DecisionHandler.class,
+                        whenTrue(createCallSequence(vertx)
+                                .addCall(IncreaseCallHandler.class)
+                                .build()))
+                .build();
+        sequence.setContextVar("number", 1);
+        sequence.setContextVar("condition", false);
+
+        makeRequest(sequence, 1);
+    }
+
+    @Test
+    public void twoWayConditionalTrueRequest() {
+        CallSequence sequence = createCallSequence(vertx)
+                .addDecision(DecisionHandler.class,
+                        whenTrue(createCallSequence(vertx)
+                                .addCall(IncreaseCallHandler.class)
+                                .build()),
+                        whenFalse(createCallSequence(vertx)
+                                .addCall(DecreaseCallHandler.class)
+                                .build()))
+                .build();
+        sequence.setContextVar("number", 1);
+        sequence.setContextVar("condition", true);
+
+        makeRequest(sequence, 2);
+    }
+
+    @Test
+    public void twoWayConditionalFalseRequest() {
+        CallSequence sequence = createCallSequence(vertx)
+                .addDecision(DecisionHandler.class,
+                        whenTrue(createCallSequence(vertx)
+                                .addCall(IncreaseCallHandler.class)
+                                .build()),
+                        whenFalse(createCallSequence(vertx)
+                                .addCall(DecreaseCallHandler.class)
+                                .build()))
+                .build();
+        sequence.setContextVar("number", 1);
+        sequence.setContextVar("condition", false);
+
+        makeRequest(sequence, 0);
+    }
+
+    @Test
+    public void oneWayRequest() {
+        CallSequence sequence = createCallSequence(vertx)
+                .addCall(GetCalledCallHandler.class)
+                .build();
+        sequence.setContextVar("number", 1);
+
+        makeRequest(sequence, 1);
+    }
+
+    private void makeRequest(final CallSequence sequence, final Integer expectedOutcome) {
+        ResponseListener listener = mock(ResponseListener.class);
+        doAnswer(new Answer() {
+            @Override
+            public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
+                Map<String, Object> contextVars = (Map<String, Object>) invocationOnMock.getArguments()[0];
+                assertThat((Integer) contextVars.get("number"), is(equalTo(expectedOutcome)));
+
+                // Have the test complete when the completed() method on the listener is called.
+                testComplete();
+                return null;
+            }
+        }).when(listener).completed(Matchers.<Map<String, Object>>any());
+
+        // Start the test.
+        sequence.execute(listener);
+    }
+}

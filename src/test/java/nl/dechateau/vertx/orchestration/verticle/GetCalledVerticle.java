@@ -1,4 +1,19 @@
-package nl.dechateau.vertx.orchestration.common;
+/*
+ * Copyright 2013 Maurice de Chateau
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package nl.dechateau.vertx.orchestration.verticle;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,7 +27,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.vertx.testtools.VertxAssert.assertThat;
 
 public class GetCalledVerticle extends BusModBase {
-    static final String GET_CALLED_VERTICLE_ADDRESS = "GET_CALLED_VERTICLE_ADDRESS";
+    public static final String GET_CALLED_VERTICLE_ADDRESS = "GET_CALLED_VERTICLE_ADDRESS";
 
     private static final Logger LOG = LoggerFactory.getLogger(GetCalledVerticle.class);
 

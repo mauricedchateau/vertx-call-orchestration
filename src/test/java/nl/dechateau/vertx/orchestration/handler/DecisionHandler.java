@@ -13,10 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.dechateau.vertx.serialization;
+package nl.dechateau.vertx.orchestration.handler;
 
-public class SerializationException extends Exception {
-    public SerializationException(String message, Throwable cause) {
-        super(message, cause);
+public class DecisionHandler extends AbstractDecisionHandler {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean makeDecision() {
+        return (Boolean) getContextVar("condition");
     }
 }
