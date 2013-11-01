@@ -34,5 +34,5 @@ public interface OrchestrationHandler {
      *
      * @return Whether this handler has completed its task.
      */
-    public boolean isCompleted();
+    boolean isCompleted();
 }

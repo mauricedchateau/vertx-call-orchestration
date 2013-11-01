@@ -47,6 +47,10 @@ public abstract class AbstractDecisionHandler implements OrchestrationHandler, R
      */
     @Override
     public final void execute(final OrchestrationContext context, final ResponseListener responseListener) {
+        if (whenTrue == null) {
+            throw new IllegalStateException("At least a call sequence for 'when true' should have been set.");
+        }
+
         this.context = context;
         this.responseListener = responseListener;
 
@@ -69,7 +73,7 @@ public abstract class AbstractDecisionHandler implements OrchestrationHandler, R
      *
      * @return Whether the decision was <code>true</code> or <code>false</code>.
      */
-    public abstract boolean makeDecision();
+    protected abstract boolean makeDecision();
 
     /**
      * Convenience method for getting a parameter from the context.
@@ -77,6 +81,10 @@ public abstract class AbstractDecisionHandler implements OrchestrationHandler, R
      * @param key The key of the parameter.
      */
     protected final Object getContextVar(final String key) {
+        if (context == null) {
+            return null;
+        }
+
         return context.getContextVar(key);
     }
 
@@ -93,6 +101,10 @@ public abstract class AbstractDecisionHandler implements OrchestrationHandler, R
      */
     @Override
     public final void completed(Map<String, Object> vars) {
+        if (responseListener == null) {
+            throw new IllegalStateException("Method completed() called before handler was executed.");
+        }
+
         // The chosen path is completed.
         isCompleted = true;
         responseListener.completed(vars);
@@ -103,6 +115,10 @@ public abstract class AbstractDecisionHandler implements OrchestrationHandler, R
      */
     @Override
     public final void error(final String errorMessage) {
+        if (responseListener == null) {
+            throw new IllegalStateException("Method error() called before handler was executed.");
+        }
+
         isCompleted = true;
         responseListener.error(errorMessage);
     }
@@ -112,6 +128,10 @@ public abstract class AbstractDecisionHandler implements OrchestrationHandler, R
      */
     @Override
     public final void error(final ErrorType type, final String errorMessage) {
+        if (responseListener == null) {
+            throw new IllegalStateException("Method error() called before handler was executed.");
+        }
+
         isCompleted = true;
         responseListener.error(type, errorMessage);
     }

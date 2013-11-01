@@ -54,7 +54,7 @@ public final class CallSequence implements ResponseListener {
 
         context = new OrchestrationContext(vertx);
 
-        this.timeout = DEFAULT_REQUEST_TIMEOUT;
+        timeout = DEFAULT_REQUEST_TIMEOUT;
     }
 
     /**
@@ -146,7 +146,7 @@ public final class CallSequence implements ResponseListener {
     }
 
     public static class Builder implements CallSyntax {
-        private Vertx vertx;
+        private final Vertx vertx;
 
         private ExecutionUnit<?> firstUnit;
 
@@ -181,7 +181,7 @@ public final class CallSequence implements ResponseListener {
                 unit.addHandler(handler.getConstructor().newInstance());
             } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException ex) {
                 LOG.error("Problem instantiating handler for class {}: {}.", handler.getName(), ex.getMessage());
-                throw new RuntimeException("Cannot instantiate handler.", ex);
+                throw new BuilderException("Cannot instantiate handler.", ex);
             }
 
             addUnitToSequence(unit);
@@ -206,7 +206,7 @@ public final class CallSequence implements ResponseListener {
                     unit.addHandler(handler.getConstructor().newInstance());
                 } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException ex) {
                     LOG.error("Problem instantiating handler for class {}: {}.", handler.getName(), ex.getMessage());
-                    throw new RuntimeException("Cannot instantiate handler.", ex);
+                    throw new BuilderException("Cannot instantiate handler.", ex);
                 }
             }
 
@@ -236,7 +236,7 @@ public final class CallSequence implements ResponseListener {
                 unit.addHandler(decision);
             } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException ex) {
                 LOG.error("Problem instantiating handler for class {}: {}.", handler.getName(), ex.getMessage());
-                throw new RuntimeException("Cannot instantiate handler.", ex);
+                throw new BuilderException("Cannot instantiate handler.", ex);
             }
 
             // Add whenTrue and whenFalse to the decision handler.
@@ -270,7 +270,7 @@ public final class CallSequence implements ResponseListener {
                 unit.addHandler(decision);
             } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException ex) {
                 LOG.error("Problem instantiating handler for class {}: {}.", handler.getName(), ex.getMessage());
-                throw new RuntimeException("Cannot instantiate handler.", ex);
+                throw new BuilderException("Cannot instantiate handler.", ex);
             }
 
             // Add whenTrue and whenFalse to the decision handler.
@@ -303,6 +303,12 @@ public final class CallSequence implements ResponseListener {
                 last = last.getNext();
             }
             last.setNext(unit);
+        }
+    }
+
+    public static class BuilderException extends RuntimeException {
+        public BuilderException(String errorMessage, Exception cause) {
+            super(errorMessage, cause);
         }
     }
 }

@@ -32,7 +32,7 @@ import org.vertx.java.core.json.JsonObject;
 public abstract class AbstractReturningCallHandler implements CallHandler, Handler<Message<JsonObject>> {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractReturningCallHandler.class);
 
-    protected ResponseListener responseListener;
+    private ResponseListener responseListener;
 
     private OrchestrationContext context;
 
@@ -98,9 +98,9 @@ public abstract class AbstractReturningCallHandler implements CallHandler, Handl
                     isCompleted = true;
                     responseListener.error(serEx.getMessage());
                     return;
-                } catch (Throwable throwable) {
+                } catch (Exception ex) {
                     isCompleted = true;
-                    responseListener.error(throwable.getMessage());
+                    responseListener.error(ex.getMessage());
                     return;
                 }
             } else {
