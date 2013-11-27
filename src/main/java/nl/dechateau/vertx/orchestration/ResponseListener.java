@@ -22,29 +22,39 @@ import java.util.Map;
  */
 public interface ResponseListener {
     /**
-     * Called by a handler when the service call was completed successfully.
+     * Called by a handler when the service call was onCompleted successfully.
      *
      * @param contextVars The variables available in the context after the successful execution.
      */
-    void completed(Map<String, Object> contextVars);
+    void onCompleted(Map<String, Object> contextVars);
 
     /**
      * Called by a handler when a service call encountered an exceptional situation.
      *
-     * @param errorMessage The error message indicating the reason for failure.
+     * @param errorMessage The onError message indicating the reason for failure.
      */
-    void error(final String errorMessage);
+    void onError(final String errorMessage);
 
     /**
      * Called by a handler when a service call encountered an exceptional situation.
      *
-     * @param errorType    The type of the error that occurred.
-     * @param errorMessage The error message indicating the reason for failure.
+     * @param errorType    The type of the onError that occurred.
+     * @param errorMessage The onError message indicating the reason for failure.
      */
-    void error(final ErrorType errorType, final String errorMessage);
+    void onError(final ErrorType errorType, final String errorMessage);
 
+    /**
+     * Error types, corresponding to the most common problems.
+     * <p/>
+     * One of the intended uses is to be able to indicate the proper HTTP onError status, when the orchestration is used
+     * by a verticle which exposes an HTTP interface.
+     */
     enum ErrorType {
+        BAD_REQUEST,
         CONTENT_MISSING,
-        TIMEOUT
+        NOT_ALLOWED,
+        TIMEOUT,
+        CONFLICT,
+        REQUEST_ENTITY_TOO_LARGE
     }
 }

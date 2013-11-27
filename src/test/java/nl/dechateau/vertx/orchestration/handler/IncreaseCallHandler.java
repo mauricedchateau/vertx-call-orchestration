@@ -16,7 +16,6 @@
 package nl.dechateau.vertx.orchestration.handler;
 
 import nl.dechateau.vertx.orchestration.verticle.IncreasingVerticle;
-import nl.dechateau.vertx.serialization.SerializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.json.JsonObject;
@@ -36,7 +35,7 @@ public class IncreaseCallHandler extends AbstractReturningCallHandler {
      * {@inheritDoc}
      */
     @Override
-    protected JsonObject getCallMessage() throws SerializationException {
+    protected JsonObject getCallMessage() {
         return new JsonObject().putNumber("input", (Integer) getContextVar("number"));
     }
 

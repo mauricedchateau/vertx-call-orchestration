@@ -16,7 +16,6 @@
 package nl.dechateau.vertx.orchestration.handler;
 
 import nl.dechateau.vertx.orchestration.ResponseListener;
-import nl.dechateau.vertx.serialization.SerializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.json.JsonObject;
@@ -40,15 +39,15 @@ public abstract class AbstractOneWayCallHandler implements CallHandler {
 
         try {
             context.getEventBus().send(getDestination(), getCallMessage());
-        } catch (SerializationException serEx) {
-            LOG.error("Problem de-serializing received data:", serEx);
+        } catch (Exception ex) {
+            LOG.error("Problem constructing/sending message:", ex);
             isCompleted = true;
-            responseListener.error(serEx.getMessage());
+            responseListener.onError(ex.getMessage());
             return;
         }
 
         isCompleted = true;
-        responseListener.completed(context.getVars());
+        responseListener.onCompleted(context.getVars());
     }
 
     /**
@@ -59,7 +58,7 @@ public abstract class AbstractOneWayCallHandler implements CallHandler {
     /**
      * @return The JSON message containing the verticle call parameters.
      */
-    protected abstract JsonObject getCallMessage() throws SerializationException;
+    protected abstract JsonObject getCallMessage();
 
     /**
      * Convenience method for getting a parameter from the context.

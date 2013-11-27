@@ -180,11 +180,11 @@ public class OrchestrationTest extends TestVerticle {
                 Map<String, Object> contextVars = (Map<String, Object>) invocationOnMock.getArguments()[0];
                 assertThat((Integer) contextVars.get("number"), is(equalTo(expectedOutcome)));
 
-                // Have the test complete when the completed() method on the listener is called.
+                // Have the test complete when the onCompleted() method on the listener is called.
                 testComplete();
                 return null;
             }
-        }).when(listener).completed(Matchers.<Map<String, Object>>any());
+        }).when(listener).onCompleted(Matchers.<Map<String, Object>>any());
 
         // Start the test.
         sequence.execute(listener);

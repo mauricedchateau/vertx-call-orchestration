@@ -16,7 +16,6 @@
 package nl.dechateau.vertx.orchestration.handler;
 
 import nl.dechateau.vertx.orchestration.ResponseListener;
-import nl.dechateau.vertx.serialization.SerializationException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,10 +47,10 @@ public abstract class AbstractReturningCallHandler implements CallHandler, Handl
 
         try {
             context.getEventBus().send(getDestination(), getCallMessage(), this);
-        } catch (SerializationException serEx) {
-            LOG.error("Problem de-serializing received data:", serEx);
+        } catch (Exception ex) {
+            LOG.error("Problem constructing/sending message:", ex);
             isCompleted = true;
-            responseListener.error(serEx.getMessage());
+            responseListener.onError(ex.getMessage());
         }
     }
 
@@ -63,7 +62,7 @@ public abstract class AbstractReturningCallHandler implements CallHandler, Handl
     /**
      * @return The JSON message containing the verticle call parameters.
      */
-    protected abstract JsonObject getCallMessage() throws SerializationException;
+    protected abstract JsonObject getCallMessage();
 
     /**
      * Convenience method for getting a parameter from the context.
@@ -93,14 +92,10 @@ public abstract class AbstractReturningCallHandler implements CallHandler, Handl
                     } else {
                         processResult((JsonObject) result);
                     }
-                } catch (SerializationException serEx) {
-                    LOG.error("Problem deserializing received data:", serEx);
-                    isCompleted = true;
-                    responseListener.error(serEx.getMessage());
-                    return;
                 } catch (Exception ex) {
+                    LOG.error("Problem processing received data:", ex);
                     isCompleted = true;
-                    responseListener.error(ex.getMessage());
+                    responseListener.onError(ex.getMessage());
                     return;
                 }
             } else {
@@ -113,7 +108,7 @@ public abstract class AbstractReturningCallHandler implements CallHandler, Handl
         }
 
         isCompleted = true;
-        responseListener.completed(context.getVars());
+        responseListener.onCompleted(context.getVars());
     }
 
     /**
@@ -126,9 +121,8 @@ public abstract class AbstractReturningCallHandler implements CallHandler, Handl
      * <b>Override this method or the next one when applicable.</b>
      *
      * @param result The JSON result object.
-     * @throws SerializationException If the JSON object could not be de-serialized into a Java object properly.
      */
-    protected void processResult(final JsonObject result) throws SerializationException {
+    protected void processResult(final JsonObject result) {
         LOG.warn("This method should have been overridden! (AbstractReturningCallHandler.processResult(JsonObject))");
     }
 
@@ -142,9 +136,8 @@ public abstract class AbstractReturningCallHandler implements CallHandler, Handl
      * <b>Override this method or the previous one when applicable.</b>
      *
      * @param result The JSON result array.
-     * @throws SerializationException If the JSON array could not be de-serialized into a Java object properly.
      */
-    protected void processResult(final JsonArray result) throws SerializationException {
+    protected void processResult(final JsonArray result) {
         LOG.warn("This method should have been overridden! (AbstractReturningCallHandler.processResult(JsonArray))");
     }
 
@@ -160,14 +153,14 @@ public abstract class AbstractReturningCallHandler implements CallHandler, Handl
     }
 
     /**
-     * Process the result of the service call in case of an error.
+     * Process the result of the service call in case of an onError.
      * <p/>
      * <b>Override this method when something needs to be done in this case.</b>
      *
-     * @param errorMessage The message that accompanied the error that occurred.
+     * @param errorMessage The message that accompanied the onError that occurred.
      */
     protected void processErrorResult(final String errorMessage) {
-        responseListener.error("Service call returned error: " + errorMessage);
+        responseListener.onError("Service call returned onError: " + errorMessage);
     }
 
     /**

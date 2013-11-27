@@ -30,9 +30,9 @@ public interface OrchestrationHandler {
     void execute(final OrchestrationContext orchestrationContext, final ResponseListener responseListener);
 
     /**
-     * Called to confirm whether this handler has completed its task yet.
+     * Called to confirm whether this handler has onCompleted its task yet.
      *
-     * @return Whether this handler has completed its task.
+     * @return Whether this handler has onCompleted its task.
      */
     boolean isCompleted();
 }

@@ -91,7 +91,7 @@ public final class CallSequence implements ResponseListener {
             @Override
             public void handle(final Long timedOut) {
                 committed = true;
-                listener.error(ResponseListener.ErrorType.TIMEOUT, "Timeout occurred handling request.");
+                listener.onError(ResponseListener.ErrorType.TIMEOUT, "Timeout occurred handling request.");
             }
         });
 
@@ -104,7 +104,7 @@ public final class CallSequence implements ResponseListener {
      * {@inheritDoc}
      */
     @Override
-    public final void completed(Map<String, Object> vars) {
+    public final void onCompleted(Map<String, Object> vars) {
         if (committed) {
             LOG.warn("Response has already been committed, ignoring.");
             return;
@@ -112,14 +112,14 @@ public final class CallSequence implements ResponseListener {
         committed = true;
         vertx.cancelTimer(timer);
 
-        listener.completed(vars);
+        listener.onCompleted(vars);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public final void error(final String errorMessage) {
+    public final void onError(final String errorMessage) {
         if (committed) {
             LOG.warn("Response has already been committed, ignoring.");
             return;
@@ -127,14 +127,14 @@ public final class CallSequence implements ResponseListener {
         committed = true;
         vertx.cancelTimer(timer);
 
-        listener.error(errorMessage);
+        listener.onError(errorMessage);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public final void error(final ErrorType errorType, final String errorMessage) {
+    public final void onError(final ErrorType errorType, final String errorMessage) {
         if (committed) {
             LOG.warn("Response has already been committed, ignoring.");
             return;
@@ -142,7 +142,7 @@ public final class CallSequence implements ResponseListener {
         committed = true;
         vertx.cancelTimer(timer);
 
-        listener.error(errorType, errorMessage);
+        listener.onError(errorType, errorMessage);
     }
 
     public static class Builder implements CallSyntax {

@@ -75,32 +75,32 @@ public final class ExecutionUnit<T extends OrchestrationHandler> implements Resp
     }
 
     @Override
-    public void completed(Map<String, Object> vars) {
+    public void onCompleted(Map<String, Object> vars) {
         for (T handler : handlers) {
             if (!handler.isCompleted()) {
                 // At least one handler is not ready yet, so don't proceed.
-                LOG.trace("Method completed() called, but waiting for other handlers in the group to complete.");
+                LOG.trace("Method onCompleted() called, but waiting for other handlers in the group to complete.");
                 return;
             }
         }
 
-        // All handlers completed; move to the next unit.
+        // All handlers onCompleted; move to the next unit.
         if (next != null) {
             next.execute(context, responseListener);
             return;
         }
 
         // End of the line; report to the caller.
-        responseListener.completed(vars);
+        responseListener.onCompleted(vars);
     }
 
     @Override
-    public void error(final String errorMessage) {
-        responseListener.error(errorMessage);
+    public void onError(final String errorMessage) {
+        responseListener.onError(errorMessage);
     }
 
     @Override
-    public void error(final ErrorType type, final String errorMessage) {
-        responseListener.error(type, errorMessage);
+    public void onError(final ErrorType type, final String errorMessage) {
+        responseListener.onError(type, errorMessage);
     }
 }

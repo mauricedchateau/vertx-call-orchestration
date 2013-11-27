@@ -63,7 +63,7 @@ public abstract class AbstractDecisionHandler implements OrchestrationHandler, R
                 whenFalse.execute(context, this);
             } else {
                 // No calls to be made within this decision.
-                completed(context.getVars());
+                onCompleted(context.getVars());
             }
         }
     }
@@ -100,39 +100,39 @@ public abstract class AbstractDecisionHandler implements OrchestrationHandler, R
      * {@inheritDoc}
      */
     @Override
-    public final void completed(Map<String, Object> vars) {
+    public final void onCompleted(Map<String, Object> vars) {
         if (responseListener == null) {
-            throw new IllegalStateException("Method completed() called before handler was executed.");
+            throw new IllegalStateException("Method onCompleted() called before handler was executed.");
         }
 
-        // The chosen path is completed.
+        // The chosen path is onCompleted.
         isCompleted = true;
-        responseListener.completed(vars);
+        responseListener.onCompleted(vars);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public final void error(final String errorMessage) {
+    public final void onError(final String errorMessage) {
         if (responseListener == null) {
-            throw new IllegalStateException("Method error() called before handler was executed.");
+            throw new IllegalStateException("Method onError() called before handler was executed.");
         }
 
         isCompleted = true;
-        responseListener.error(errorMessage);
+        responseListener.onError(errorMessage);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public final void error(final ErrorType type, final String errorMessage) {
+    public final void onError(final ErrorType type, final String errorMessage) {
         if (responseListener == null) {
-            throw new IllegalStateException("Method error() called before handler was executed.");
+            throw new IllegalStateException("Method onError() called before handler was executed.");
         }
 
         isCompleted = true;
-        responseListener.error(type, errorMessage);
+        responseListener.onError(type, errorMessage);
     }
 }
