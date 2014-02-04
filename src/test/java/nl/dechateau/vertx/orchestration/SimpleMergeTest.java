@@ -16,10 +16,9 @@
 package nl.dechateau.vertx.orchestration;
 
 import nl.dechateau.vertx.orchestration.handler.DecisionHandler;
-import nl.dechateau.vertx.orchestration.handler.GetCalledCallHandler;
+import nl.dechateau.vertx.orchestration.handler.DecreaseCallHandler;
 import nl.dechateau.vertx.orchestration.handler.IncreaseCallHandler;
 import nl.dechateau.vertx.orchestration.verticle.DecreasingVerticle;
-import nl.dechateau.vertx.orchestration.verticle.GetCalledVerticle;
 import nl.dechateau.vertx.orchestration.verticle.IncreasingVerticle;
 import org.junit.Test;
 import org.mockito.Matchers;
@@ -34,8 +33,7 @@ import org.vertx.testtools.TestVerticle;
 
 import java.util.Map;
 
-import static nl.dechateau.vertx.orchestration.CallSequence.Builder.createCallSequence;
-import static nl.dechateau.vertx.orchestration.CallSequence.Builder.whenTrue;
+import static nl.dechateau.vertx.orchestration.CallSequence.Builder.*;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.mockito.Mockito.doAnswer;
@@ -43,18 +41,18 @@ import static org.mockito.Mockito.mock;
 import static org.vertx.testtools.VertxAssert.assertThat;
 import static org.vertx.testtools.VertxAssert.testComplete;
 
-public class OrchestrationTest extends TestVerticle {
-    private static final Logger LOG = LoggerFactory.getLogger(OrchestrationTest.class);
+public class SimpleMergeTest extends TestVerticle {
+    private static final Logger LOG = LoggerFactory.getLogger(SimpleMergeTest.class);
 
     @Override
     public void start(final Future<Void> startResult) {
-        Handler<AsyncResult<String>> handler = new Handler<AsyncResult<String>>() {
-            private int waitFor = 3;
+        final Handler<AsyncResult<String>> handler = new Handler<AsyncResult<String>>() {
+            private int waitFor = 2;
 
             @Override
             public void handle(AsyncResult<String> event) {
                 if (--waitFor == 0) {
-                    OrchestrationTest.super.start();
+                    SimpleMergeTest.super.start();
                     startResult.setResult(null);
                     LOG.trace("HttpServerRequestTest verticle started.");
                 }
@@ -62,49 +60,26 @@ public class OrchestrationTest extends TestVerticle {
         };
         container.deployVerticle(IncreasingVerticle.class.getName(), handler);
         container.deployVerticle(DecreasingVerticle.class.getName(), handler);
-        container.deployVerticle(GetCalledVerticle.class.getName(), handler);
     }
 
     @Test
-    public void oneWayConditionalTrueRequest() {
-        CallSequence sequence = createCallSequence(vertx)
+    public void simpleMergeRequest() {
+        final CallSequence sequence = createCallSequence(vertx)
                 .addDecision(DecisionHandler.class,
                         whenTrue(createCallSequence(vertx)
                                 .addCall(IncreaseCallHandler.class)
+                                .build()),
+                        whenFalse(createCallSequence(vertx)
+                                .addCall(DecreaseCallHandler.class)
                                 .build()))
+                .addCall(IncreaseCallHandler.class)
                 .build();
         sequence.setContextVar("number", 1);
         sequence.setContextVar("condition", true);
 
-        makeRequest(sequence, 2);
-    }
+        final Integer expectedOutcome = 3;
 
-    @Test
-    public void oneWayConditionalFalseRequest() {
-        CallSequence sequence = createCallSequence(vertx)
-                .addDecision(DecisionHandler.class,
-                        whenTrue(createCallSequence(vertx)
-                                .addCall(IncreaseCallHandler.class)
-                                .build()))
-                .build();
-        sequence.setContextVar("number", 1);
-        sequence.setContextVar("condition", false);
-
-        makeRequest(sequence, 1);
-    }
-
-    @Test
-    public void oneWayRequest() {
-        CallSequence sequence = createCallSequence(vertx)
-                .addCall(GetCalledCallHandler.class)
-                .build();
-        sequence.setContextVar("number", 1);
-
-        makeRequest(sequence, 1);
-    }
-
-    private void makeRequest(final CallSequence sequence, final Integer expectedOutcome) {
-        ResponseListener listener = mock(ResponseListener.class);
+        final ResponseListener listener = mock(ResponseListener.class);
         doAnswer(new Answer() {
             @Override
             public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
