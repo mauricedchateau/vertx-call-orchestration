@@ -33,8 +33,7 @@ To make the API as user-friendly as possible, it was made fluent and includes a 
 To see how this works, please have a look at the [unit test](./src/test/java/nl/dechateau/vertx/orchestration/OrchestrationTest.java).
 
 ## Are all workflow patterns accounted for?
-No, not by far, just the basic ones. It is not an objective of this project to be a complete or (strict) implementation of all control-flow patterns
-- just the ones that have been encountered so far in the (real-life) projects using it.
+No, not by far, just the basic ones. It is not an objective of this project to be a complete or (strict) implementation of all control-flow patterns - just the ones that have been encountered so far in the (real-life) projects using it.
 Furthermore, some scenarios were required to be supported that are not part of the workflow patterns.
 
 If someone encounters a case in which a pattern or scenario applies which is not yet covered here,
