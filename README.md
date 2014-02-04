@@ -26,7 +26,7 @@ The general idea is that each call to another verticle can be reduced to answeri
   * How should the (possibly exceptional) result be treated?
 
 Each call can be encapsulated as a separate object, which answers all of the (applicable) questions.
-These objects then can be orchestrated following the [control-flow patterns](../../patters.md).
+These objects then can be orchestrated following the [control-flow patterns](./patterns.md).
 
 To make the API as user-friendly as possible, it was made fluent and includes a number of static methods as part of a Builder pattern.
 
