@@ -1,15 +1,15 @@
-# Control-flow patterns for orchestrating vert.x calls
+## Control-flow patterns for orchestrating vert.x calls
 
- * [Sequence](#Sequence)
- * [Parallel Split](#Parallel_Split)
- * [Synchronization](#Synchronization)
- * [Exclusive Choice](#Exclusive_Choice)
- * [Simple Merge](#Simple_Merge)
+ * [Sequence](#sequence)
+ * [Parallel Split](#parallel_split)
+ * [Synchronization](#synchronization)
+ * [Exclusive Choice](#exclusive_choice)
+ * [Simple Merge](#simple_merge)
 
-# Other supported scenarios
+## Other supported scenarios
 
- * [Decision with one call](#Decision_with_one_call)
- * [One-way call](#One_way_call)
+ * [Decision with one call](#decision_with_one_call)
+ * [One-way call](#one_way_call)
 
 ### Sequence
 This is the simplest use case, just make the next call when the previous one was completed:
@@ -17,7 +17,7 @@ This is the simplest use case, just make the next call when the previous one was
 ![Sequence control flow](http://www.workflowpatterns.com/patterns/control/images/fig1.png)
 
 Code snippet for three calls in sequence:
-
+```java
     class FirstCallHandler extends AbstractReturningCallHandler { ... }
     class SecondCallHandler extends AbstractReturningCallHandler { ... }
     class ThirdCallHandler extends AbstractReturningCallHandler { ... }
@@ -32,14 +32,14 @@ Code snippet for three calls in sequence:
                             .build();
     // Set context vars, timeout.
     sequence.execute(listener);
-
+```
 ### Parallel_Split
 This makes it possible to execute multiple calls in parallel:
 
 ![Parallel split control flow](http://www.workflowpatterns.com/patterns/control/images/fig2.png)
 
 Code snippet for two consecutive times of two calls in parallel:
-
+```java
     ResponseListener listener = ...
 
     CallSequence sequence = createCallSequence(vertx)
@@ -48,7 +48,7 @@ Code snippet for two consecutive times of two calls in parallel:
                             .build();
     // Set context vars, timeout.
     sequence.execute(listener);
-
+```
 ### Synchronization
 This actually is the implicit way-of-working for the parallel calls: the orchestration waits for all of them to complete before moving on:
 
@@ -60,7 +60,7 @@ In this case, there are two possible paths the execution can take; which one is 
 ![Exclusive choice control flow](http://www.workflowpatterns.com/patterns/control/images/fig4.png)
 
 Code snippet for two calls, one of which is executed depending on the outcome of the decision:
-
+```java
     ResponseListener listener = ...
 
     CallSequence sequence = createCallSequence(vertx)
@@ -74,7 +74,7 @@ Code snippet for two calls, one of which is executed depending on the outcome of
                             .build();
     // Set context vars, timeout.
     sequence.execute(listener);
-
+```
 ### Simple_Merge
 As with the Synchronization, this is the implicit behaviour of the decision:
 
@@ -84,7 +84,7 @@ As with the Synchronization, this is the implicit behaviour of the decision:
 Here a decision is used to determine at runtime whether a sequence should be run at all.
 
 Code snippet for a call that is executed depending on the outcome of the decision:
-
+```java
     ResponseListener listener = ...
 
     CallSequence sequence = createCallSequence(vertx)
@@ -95,13 +95,13 @@ Code snippet for a call that is executed depending on the outcome of the decisio
                             .build();
     // Set context vars, timeout.
     sequence.execute(listener);
-
+```
 ### One_way_call
 Not all calls have a return value, and in some cases the caller may not be interested in it even when there is one.
 For such cases, a fire-and-forget possibility is built in.
 
 Code snippet for a call that is executed depending on the outcome of the decision:
-
+```java
     class OneWayCallHandler extends AbstractOneWayCallHandler { ... }
 
 
@@ -112,4 +112,4 @@ Code snippet for a call that is executed depending on the outcome of the decisio
                             .build();
     // Set context vars, timeout.
     sequence.execute(listener);
-
+```
